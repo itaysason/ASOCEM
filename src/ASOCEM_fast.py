@@ -170,7 +170,7 @@ class DataHolder:
 
 
 def ASOCEM_ver1(micrograph_addr, output_dir, particle_size, downscale_size, area_size,
-                contamination_criterion, tmp_dir='./tmp', max_iter=600, n_mgraphs_sim=10):
+                contamination_criterion, tmp_dir='./tmp', n_mgraphs_sim=10):
 
     # Require odd area_size, and odd downscale_size such that area_size | downscale_size
     area_size = area_size - 1 if area_size % 2 == 0 else area_size
