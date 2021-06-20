@@ -1,0 +1,14 @@
+name: ASOCEM
+
+dependencies:
+  - python>=3.7
+  - click
+  - numpy
+  - scipy
+  - scikit-image
+  - matplotlib
+  - numba
+  - pip:
+      - opencv-python
+      - mrcfile
+      - tqdm
