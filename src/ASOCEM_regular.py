@@ -176,22 +176,9 @@ def chan_vesse_process(I, phi_0, cov_mat_sz, dt, mu, nu, eta, eps, max_iter, tol
     max_allowed_index_1 = size_1 - size_1 % area - 1
 
     stop_condition_n = 5
-    time1 = 0
-    time2 = 0
-    tic01 = time.time()
     for iteration in range(1, max_iter + 1):
         phi_max = skimage.measure.block_reduce(phi, (area, area), np.max)
         phi_min = skimage.measure.block_reduce(phi, (area, area), np.min)
-
-        if phi_max.shape[0] * area > size_0:
-            phi_max = phi_max[:-1]
-            phi_min = phi_min[:-1]
-        if phi_max.shape[1] * area > size_1:
-            phi_max = phi_max[:, :-1]
-            phi_min = phi_min[:, :-1]
-
-        if phi_max.shape[0] != size_0 // area or phi_max.shape[1] != size_0 // area:
-            raise Warning('phi_max and phi_min have the wrong shape')
 
         patch_0 = I_patches[np.where(phi_max >= 0)].T.copy()
         patch_1 = I_patches[np.where(phi_min <= 0)].T.copy()
@@ -213,27 +200,13 @@ def chan_vesse_process(I, phi_0, cov_mat_sz, dt, mu, nu, eta, eps, max_iter, tol
         logdet1 = logdet_amitay(cov1_est)
 
         # Compute phi near zero
-        tic1 = time.time()
         band_width = np.min(np.abs(phi[phi != 0]))
-        pos_phi = phi >= 0
-        minus_neg_phi = -phi[~pos_phi]
-        pos_phi = phi[pos_phi]
-        while True:
-            band_width *= 2
-            tmp_p = pos_phi < band_width
-            tmp_m = minus_neg_phi < band_width
-            if np.count_nonzero(tmp_p) + np.count_nonzero(tmp_m) > 0.5 * phi.size:
-                break
-        tic2 = time.time()
-
-        band_width2 = np.min(np.abs(phi[phi != 0]))
         median = np.median(np.abs(phi))
-        power = np.ceil(np.log2(median / band_width2))
-        band_width2 *= 2 ** power
-        tic3 = time.time()
-        # print(band_width2 - band_width)
-        time1 += tic2 - tic1
-        time2 += tic3 - tic2
+        # In the case log median / bw is whole number then bw will be larger than less than half
+        # floor + 1 ensures more than half
+        power = np.floor(np.log2(median / band_width)) + 1
+        band_width *= 2 ** power
+
         row, col = np.where(np.logical_and(phi < band_width, phi > -band_width))
 
         good_indices = np.logical_and(np.logical_and(min_allowed_index_0 <= row, row < max_allowed_index_0),
@@ -270,10 +243,6 @@ def chan_vesse_process(I, phi_0, cov_mat_sz, dt, mu, nu, eta, eps, max_iter, tol
                 break
         if iteration % stop_condition_n == 0:
             phi_old = phi.copy()
-    x = time.time() - tic01
-    print(time2, time1, x)
-    print(time1 / x)
-    print(time2 / x)
     return phi
 
 
